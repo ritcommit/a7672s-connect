@@ -35,23 +35,37 @@ typedef struct
 /*****************LOCAL FUNCTION PROTOTYPES****************/
 
 /*****************GLOBAL FUNCTIONS****************/
-bool a7672s_start()
+__weak bool a7672s_powerKey_Off()
 {
  /* TODO */
 }
 
-bool a7672s_stop()
+__weak bool a7672s_powerKey_On()
 {
     /* TODO */
 }
 
-bool a7672s_softRestart()
+__weak bool a7672s_resetKey_Off()
+{
+ /* TODO */
+}
+
+__weak bool a7672s_resetKey_On()
 {
     /* TODO */
 }
 
-bool a7672s_hardRestart()
+bool a7672s_softStart()
 {
+    a7672s_powerKey_Off();
+    a7672s_powerKey_On();
+    /* TODO */
+}
+
+bool a7672s_hardReset()
+{
+    a7672s_resetKey_Off();
+    a7672s_resetKey_On();
     /* TODO */
 }
 

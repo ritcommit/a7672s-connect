@@ -17,8 +17,8 @@
 /*****************GLOBAL FUNCTION PROTOTYPES****************/
 bool a7672s_start();
 bool a7672s_stop();
-bool a7672s_softRestart();
-bool a7672s_hardRestart();
+bool a7672s_softStart();
+bool a7672s_hardReset();
 bool a7672s_netConnect();
 bool a7672s_bleConnect();
 bool a7672s_gpsConnect();
