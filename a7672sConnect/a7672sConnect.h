@@ -14,11 +14,33 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/*****************TYPEDEFS****************/
+typedef enum{
+	A7672S_STATE_HARD_RESET=0,
+	A7672S_STATE_PWR_OFF,
+	A7672S_STATE_PWR_ON,
+	A7672S_STATE_NET_CONNECT,
+	A7672S_STATE_HIVE_CONNECT,
+	A7672S_STATE_HIVE_SUBSCRIBE,
+	A7672S_STATE_HIVE_PUBLISH,
+	A7672S_STATE_MAX
+} a7672s_states_t;
+
+typedef enum
+{
+	A7672S_GPS_STATE_POWER_OFF,
+	A7672S_GPS_STATE_POWER_ON,
+	A7672S_GPS_STATE_COLD_START,
+	A7672S_GPS_STATE_GET_AGPS,
+	A7672S_GPS_STATE_GET_GPS,
+	A7672S_GPS_STATE_MAX
+} a7672s_gps_states_t;
+
+/*****************GLOBAL VARIABLES****************/
+
 /*****************GLOBAL FUNCTION PROTOTYPES****************/
 bool a7672s_start();
 bool a7672s_stop();
-bool a7672s_softStart();
-bool a7672s_hardReset();
 bool a7672s_netConnect();
 bool a7672s_bleConnect();
 bool a7672s_gpsConnect();
