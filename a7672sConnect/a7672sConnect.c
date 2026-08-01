@@ -24,6 +24,7 @@
 #define A7672S_MQTT_CLEANSESSION       		(1)
 #define A7672S_APN							"update_with_your_apn"
 #define CLIENT_ID                           "update_with_your_client_id"
+#define IOT_RX_BUFFER_MAX                   (128)
 
 /*****************TYPEDEFS****************/
 typedef bool (*a7672sHandler_t)(const char* cmd, const char* resp, uint32_t timeout); 
@@ -85,6 +86,8 @@ typedef struct{
 /*****************LOCAL VARIABLES****************/
 static a7672s_states_t a7672s_4g_state = A7672S_STATE_PWR_OFF;
 static a7672s_gps_states_t a7672s_gps_state = A7672S_GPS_STATE_POWER_OFF;
+static char signal_quality_str[5] = {0};
+static char receive_data[IOT_RX_BUFFER_MAX] = {0};
 
 static a7672s_cmdresp_t netconnect[A7672S_NETCONN_DONE] = {
 	{.cmd= "AT"MODEM_NL,.resp= MODEM_OK,.timeout= 1000U,.rx_handler= A7672S_Bool_Handler},
@@ -122,6 +125,7 @@ static bool A7672S_Creg_Handler(const char* cmd, const char* resp, uint32_t tout
 static bool A7672S_Gps_Handler(const char* cmd, const char* resp, uint32_t tout);
 static char* A7672S_Receive_Response(const char* resp, uint32_t tout);
 static void A7672S_Subscribe_Handler(void);
+static int string_to_int(const char *str);
 
 /*****************GLOBAL FUNCTIONS****************/
 __weak void a7672s_powerKey_Off()
@@ -144,12 +148,12 @@ __weak void a7672s_resetKey_On()
     /* TODO */
 }
 
-__weak void a7672s_serial_send()
+__weak void a7672s_serial_send(const uint8_t* buff, size_t len)
 {
     /* TODO */
 }
 
-__weak char* a7672s_serial_receive()
+__weak char* a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
 {
     /* TODO */
 }
@@ -168,7 +172,7 @@ void a7672s_hardReset()
     /* TODO */
 }
 
-void a7672s_start(bool hard_reset_b)
+void a7672s_modemStart(bool hard_reset_b)
 {
     if(true == hard_reset_b)
     {
@@ -177,7 +181,7 @@ void a7672s_start(bool hard_reset_b)
     a7672s_softStart();
 }
 
-void a7672s_stop()
+void a7672s_modemStop()
 {
     a7672s_powerKey_Off();
 }
@@ -290,7 +294,108 @@ bool a7672s_wsConnect()
     /* TODO */
 }
 
-/*****************LOCAL FUNCTIONS****************/
+int a7672s_getSigq()
+{
+    a7672s_nc_states_t nc_state = A7672S_NETCONN_CSQ;
+    if (true == netconnect[nc_state].rx_handler(netconnect[nc_state].cmd, netconnect[nc_state].resp, netconnect[nc_state].timeout))
+    {
+        return string_to_int(signal_quality_str);
+    }
+    return 0;
+}
 
+/*****************LOCAL FUNCTIONS****************/
+static bool A7672S_Bool_Handler(const char* a7672s_cmd, const char* a7672s_resp, uint32_t a7672s_timeout)
+{
+	bool ret_val = false;
+	a7672s_serial_send((const uint8_t*)a7672s_cmd, strlen(a7672s_cmd));
+	if(A7672S_Receive_Response(a7672s_resp, a7672s_timeout) != NULL)
+	{
+		ret_val = true;
+	}
+	return ret_val;
+}
+
+static bool A7672S_SignalQ_Handler(const char* a7672s_cmd, const char* a7672s_resp, uint32_t a7672s_timeout)
+{
+	bool ret_val = false;
+	a7672s_serial_send((const uint8_t*)a7672s_cmd, strlen(a7672s_cmd));
+	char *index = A7672S_Receive_Response(a7672s_resp, a7672s_timeout);
+	if ((index != NULL) && (strlen(index) > 6U))
+	{
+		char *signal_quality_ptr = strchr(index, ',');
+		if (signal_quality_ptr != NULL)
+		{
+			uint32_t sig_len = signal_quality_ptr - &index[6];
+			if (sig_len < sizeof(signal_quality_str))
+			{
+				if ( NULL != memcpy(signal_quality_str, &index[6], sig_len))
+				{
+					signal_quality_str[sig_len] = '\0';
+				}
+			}
+		}
+		if ((0 != strcmp(signal_quality_str, "0")) && (0 != strcmp(signal_quality_str, "99")))
+		{
+			ret_val = true;
+		}
+	}
+	return ret_val;
+}
+
+static bool A7672S_Creg_Handler(const char* a7672s_cmd, const char* a7672s_resp, uint32_t a7672s_timeout)
+{
+	bool ret_val = false;
+	Cebms_Send_A7672S_Data((const uint8_t*)a7672s_cmd, strlen(a7672s_cmd));
+	char *index = A7672S_Receive_Response(a7672s_resp, a7672s_timeout);
+	if ((index != NULL) && (strlen(index) > 9U))
+	{
+		a7672s_reg_stat_t network_stat = index[9] - '0';
+		if ((network_stat == REGISTERED_HOME) || (network_stat == REGISTERED_ROAMING))
+		{
+			ret_val = true;
+		}
+	}
+	return ret_val;
+}
+
+static char* A7672S_Receive_Response(const char *a7672s_resp, uint32_t timeout)
+{
+	char *index = NULL;
+
+    uint32_t bytes_rxd = a7672s_serial_receive((uint8_t *)(receive_data), (IOT_RX_BUFFER_MAX - 1U), timeout);
+    receive_data[bytes_rxd] = '\0';
+    index = strstr(receive_data, a7672s_resp);
+	return index;
+}
+
+static int string_to_int(const char *str)
+{
+    int value = 0;
+    int sign = 1;
+
+    if (str == NULL)
+    {
+        return 0;
+    }
+
+    if (*str == '-')
+    {
+        sign = -1;
+        str++;
+    }
+    else if (*str == '+')
+    {
+        str++;
+    }
+
+    while ((*str >= '0') && (*str <= '9'))
+    {
+        value = (value * 10) + (*str - '0');
+        str++;
+    }
+
+    return value * sign;
+}
 
 /* EOF */

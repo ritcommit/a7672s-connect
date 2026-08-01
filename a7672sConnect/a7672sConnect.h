@@ -39,14 +39,15 @@ typedef enum
 /*****************GLOBAL VARIABLES****************/
 
 /*****************GLOBAL FUNCTION PROTOTYPES****************/
-bool a7672s_start();
-bool a7672s_stop();
-bool a7672s_netConnect();
-bool a7672s_bleConnect();
-bool a7672s_gpsConnect();
-bool a7672s_mqttConnect();
-bool a7672s_mqttPublish();
-bool a7672s_mqttSubscribe();
-bool a7672s_wsConnect();
+bool a7672s_modemStart(bool hardreset);
+bool a7672s_modemStop(void);
+bool a7672s_netConnect(const char* apn);
+bool a7672s_bleConnect(void);
+bool a7672s_gpsConnect(void);
+bool a7672s_mqttConnect(const char* client_id, const char* url, int port, int keepalive, const char* user, const char* passwd);
+bool a7672s_mqttPublish(const char* data, size_t len, const char* topic, int qos);
+bool a7672s_mqttSubscribe(void);
+bool a7672s_wsConnect(void);
+int  a7672s_getSigq(void);
 
 #endif /* EOF */
