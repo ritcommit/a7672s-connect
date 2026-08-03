@@ -11,6 +11,7 @@ set(SRC_FILES ${A7672S_CONNECT_SRC} ${MQTT_EXAMPLE_SRC})
 
 # include paths (headers live next to a7672sConnect.c)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../a7672sConnect")
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../ritJson/ritJson")
 
 # executable for the MQTT example
 add_executable(a7672sConnect_mqtt ${SRC_FILES})

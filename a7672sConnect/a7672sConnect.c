@@ -126,6 +126,8 @@ static bool A7672S_Gps_Handler(const char* cmd, const char* resp, uint32_t tout)
 static char* A7672S_Receive_Response(const char* resp, uint32_t tout);
 static void A7672S_Subscribe_Handler(void);
 static int string_to_int(const char *str);
+static void a7672s_softStart(void);
+static void a7672s_hardReset(void);
 
 /*****************GLOBAL FUNCTIONS****************/
 __weak void a7672s_powerKey_Off()
@@ -155,20 +157,6 @@ __weak void a7672s_serial_send(const uint8_t* buff, size_t len)
 
 __weak char* a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
 {
-    /* TODO */
-}
-
-void a7672s_softStart()
-{
-    a7672s_powerKey_Off();
-    a7672s_powerKey_On();
-    /* TODO */
-}
-
-void a7672s_hardReset()
-{
-    a7672s_resetKey_Off();
-    a7672s_resetKey_On();
     /* TODO */
 }
 
@@ -305,6 +293,18 @@ int a7672s_getSigq()
 }
 
 /*****************LOCAL FUNCTIONS****************/
+static void a7672s_softStart()
+{
+    a7672s_powerKey_Off();
+    a7672s_powerKey_On();
+}
+
+static void a7672s_hardReset()
+{
+    a7672s_resetKey_Off();
+    a7672s_resetKey_On();
+}
+
 static bool A7672S_Bool_Handler(const char* a7672s_cmd, const char* a7672s_resp, uint32_t a7672s_timeout)
 {
 	bool ret_val = false;
