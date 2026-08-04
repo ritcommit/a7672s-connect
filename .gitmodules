@@ -1,0 +1,3 @@
+[submodule "ritJson"]
+	path = ritJson
+	url = https://github.com/ritcommit/ritJson.git
