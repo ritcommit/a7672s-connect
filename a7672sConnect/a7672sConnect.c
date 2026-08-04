@@ -22,6 +22,8 @@
 #define A7672S_MQTT_CONNECT_CMD_SIZE        (128)
 #define A7672S_MQTT_QOS                		(0)
 #define A7672S_MQTT_CLEANSESSION       		(1)
+#define MODEM_NL           				    "\r\n"
+#define MODEM_OK						    "OK"
 #define A7672S_APN							"update_with_your_apn"
 #define CLIENT_ID                           "update_with_your_client_id"
 #define IOT_RX_BUFFER_MAX                   (128)
@@ -71,7 +73,7 @@ typedef enum{
 	A7672S_GPSCONN_COLD_START,
 	A7672S_GPSCONN_GET_AGPS_DATA,
 	A7672S_GPSCONN_GET_GNSS_DATA,
-	A7672S_GPSCONN_CONNECT_DONE
+	A7672S_GPSCONN_DONE
 } a7672s_gc_states_t;
 
 typedef struct{
@@ -80,6 +82,17 @@ typedef struct{
 	uint32_t timeout;
 	a7672sHandler_t rx_handler;
 } a7672s_cmdresp_t;
+
+/*************************LOCAL FUNCTION PROTOTYPES***************************/
+static bool A7672S_Bool_Handler(const char* cmd, const char* resp, uint32_t tout);
+static bool A7672S_SignalQ_Handler(const char* cmd, const char* resp, uint32_t tout);
+static bool A7672S_Creg_Handler(const char* cmd, const char* resp, uint32_t tout);
+static bool A7672S_Gps_Handler(const char* cmd, const char* resp, uint32_t tout);
+static char* A7672S_Receive_Response(const char* resp, uint32_t tout);
+static void A7672S_Subscribe_Handler(void);
+static int string_to_int(const char *str);
+static void a7672s_softStart(void);
+static void a7672s_hardReset(void);
 
 /******************************GLOBAL VARIABLES*******************************/
 
@@ -118,17 +131,6 @@ static a7672s_cmdresp_t gpsconnect[A7672S_GPSCONN_DONE] = {
 	{.cmd= "AT+CAGPS"MODEM_NL,.resp= MODEM_OK,.timeout= 1000,.rx_handler= A7672S_Bool_Handler},
 	{.cmd= "AT+CGNSSINFO"MODEM_NL,.resp= "+CGNSSINFO: ",.timeout= 9000,.rx_handler= A7672S_Gps_Handler},
 };
-
-/*************************LOCAL FUNCTION PROTOTYPES***************************/
-static bool A7672S_Bool_Handler(const char* cmd, const char* resp, uint32_t tout);
-static bool A7672S_SignalQ_Handler(const char* cmd, const char* resp, uint32_t tout);
-static bool A7672S_Creg_Handler(const char* cmd, const char* resp, uint32_t tout);
-static bool A7672S_Gps_Handler(const char* cmd, const char* resp, uint32_t tout);
-static char* A7672S_Receive_Response(const char* resp, uint32_t tout);
-static void A7672S_Subscribe_Handler(void);
-static int string_to_int(const char *str);
-static void a7672s_softStart(void);
-static void a7672s_hardReset(void);
 
 /******************************GLOBAL FUNCTIONS*******************************/
 __weak void a7672s_delay_ms(uint32_t delaytime)
@@ -176,7 +178,7 @@ __weak void a7672s_serial_send(const uint8_t* buff, size_t len)
     (void)len;
 }
 
-__weak char* a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
+__weak uint32_t a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
 {
     /* NOTE : This function Should not be modified here,
             this Should be implemented in the user file
@@ -206,7 +208,7 @@ bool a7672s_netConnect(const char* apn)
     uint8_t err_netconnect=0U;
     a7672s_nc_states_t nc_state = A7672S_NETCONN_INIT;
 
-    snprintf(netconnect[A7672S_NETCONN_CGDCONT],
+    snprintf(netconnect[A7672S_NETCONN_CGDCONT].cmd,
         A7672S_CMD_SIZE_MAX,
         "AT+CGDCONT=1,\"IP\",\"%s\""MODEM_NL,
         apn);
@@ -253,7 +255,7 @@ bool a7672s_mqttConnect(const char* client_id, const char* url, int port, int ke
         "AT+CMQTTCONNECT=0,\"%s:%d\",%d,%d,\"%s\",\"%s\""MODEM_NL,
         url, port, keepalive, A7672S_MQTT_CLEANSESSION, user, passwd);
 
-    snprintf(mqttconnect[A7672S_MQTTCONN_MQTTACCQ],
+    snprintf(mqttconnect[A7672S_MQTTCONN_MQTTACCQ].cmd,
         A7672S_CMD_SIZE_MAX,
         "AT+CMQTTACCQ=0,\"%s\",0"MODEM_NL,
         client_id);
@@ -267,7 +269,7 @@ bool a7672s_mqttConnect(const char* client_id, const char* url, int port, int ke
         }
         else
         {
-            if (mc_state > IOT_HC_MQTTSTOP)
+            if (mc_state > A7672S_MQTTCONN_MQTTSTOP)
             {
                 err_mqttconnect += 1U;
             }
@@ -278,7 +280,7 @@ bool a7672s_mqttConnect(const char* client_id, const char* url, int port, int ke
         }
     }
 
-    if ((IOT_HC_DONE == mc_state) && ( true == A7672S_Bool_Handler(mqtt_connect_cmd, "+CMQTTCONNECT: 0,0", 9000U) ) )
+    if ((A7672S_MQTTCONN_DONE == mc_state) && ( true == A7672S_Bool_Handler(mqtt_connect_cmd, "+CMQTTCONNECT: 0,0", 9000U) ) )
     {
         ret_val = true;
     }
@@ -294,7 +296,7 @@ bool a7672s_mqttPublish(const char* data, size_t len, const char* topic, int qos
     {
         if (true == A7672S_Bool_Handler(publish_cmd, ">", 1000U))
         {
-            if (true == publish_cmd(data,  "+CMQTTPUB: 0,0", 1000U))
+            if (true == A7672S_Bool_Handler(data,  "+CMQTTPUB: 0,0", 1000U))
             {
                 ret_val = true;
             }
@@ -376,7 +378,7 @@ static bool A7672S_SignalQ_Handler(const char* a7672s_cmd, const char* a7672s_re
 static bool A7672S_Creg_Handler(const char* a7672s_cmd, const char* a7672s_resp, uint32_t a7672s_timeout)
 {
 	bool ret_val = false;
-	Cebms_Send_A7672S_Data((const uint8_t*)a7672s_cmd, strlen(a7672s_cmd));
+	a7672s_serial_send((const uint8_t*)a7672s_cmd, strlen(a7672s_cmd));
 	char *index = A7672S_Receive_Response(a7672s_resp, a7672s_timeout);
 	if ((index != NULL) && (strlen(index) > 9U))
 	{
@@ -387,6 +389,14 @@ static bool A7672S_Creg_Handler(const char* a7672s_cmd, const char* a7672s_resp,
 		}
 	}
 	return ret_val;
+}
+
+static bool A7672S_Gps_Handler(const char* cmd, const char* resp, uint32_t tout)
+{
+    (void)cmd;
+    (void)resp;
+    (void)tout;
+    /* TODO */
 }
 
 static char* A7672S_Receive_Response(const char *a7672s_resp, uint32_t timeout)

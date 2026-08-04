@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.25)
 project(a7672sConnect C)
 
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -6,8 +6,9 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # Add the executable
 # Gather all .c sources from the ritJson and example folders
 file(GLOB A7672S_CONNECT_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../../a7672sConnect/a7672sConnect.c")
+file(GLOB RITJSON_SRC "${CMAKE_CURRENT_SOURCE_DIR}/../../ritJson/ritJson/ritJson.c")
 file(GLOB MQTT_EXAMPLE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/a7672sConnect_mqtt.c")
-set(SRC_FILES ${A7672S_CONNECT_SRC} ${MQTT_EXAMPLE_SRC})
+set(SRC_FILES ${A7672S_CONNECT_SRC} ${RITJSON_SRC} ${MQTT_EXAMPLE_SRC})
 
 # include paths (headers live next to a7672sConnect.c)
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/../../a7672sConnect")

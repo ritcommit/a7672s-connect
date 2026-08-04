@@ -55,11 +55,11 @@ void a7672s_powerKey_On(void);
 void a7672s_resetKey_Off(void);
 void a7672s_resetKey_On(void);
 void a7672s_serial_send(const uint8_t* buff, size_t len);
-char* a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout);
+uint32_t a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout);
 
 /* Modem connection API */
-bool a7672s_modemStart(bool hardreset);
-bool a7672s_modemStop(void);
+void a7672s_modemStart(bool hardreset);
+void a7672s_modemStop(void);
 bool a7672s_netConnect(const char* apn);
 bool a7672s_bleConnect(void);
 bool a7672s_gpsConnect(void);

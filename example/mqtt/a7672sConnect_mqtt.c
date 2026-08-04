@@ -93,7 +93,7 @@ int main()
                 }
                 break;
             
-            case MODEM_NETCONNECT:
+            case MODEM_NET_CONNECT:
                 if (true == a7672s_netConnect(MODEM_APN))
                 {
                     error_count_u8 = 0U;
@@ -106,7 +106,7 @@ int main()
                 break;
             
             case MODEM_MQTT_CONNECT:
-                if (true == a7672s_netConnect(MQTT_CLIENT, MQTT_URL, 
+                if (true == a7672s_mqttConnect(MQTT_CLIENT, MQTT_URL, 
                     MQTT_PORT, MQTT_KEEPALIVE, MQTT_USER, MQTT_PASSWORD))
                 {
                     error_count_u8 = 0U;
@@ -142,55 +142,37 @@ int main()
 /*******************************WEAK FUNCTIONS********************************/
 void a7672s_delay_ms(uint32_t delaytime)
 {
-    /* NOTE : This function Should not be modified here,
-            this Should be implemented in the user file
-   */
-  (void)delaytime;
+    printf("Delay function Dummy\n");
 }
 
 void a7672s_powerKey_Off(void)
 {
-    /* NOTE : This function Should not be modified here,
-            this Should be implemented in the user file
-   */
+    printf("Power key OFF function Dummy\n");
 }
 
 void a7672s_powerKey_On(void)
 {
-    /* NOTE : This function Should not be modified here,
-            this Should be implemented in the user file
-   */
+    printf("Power key ON function Dummy\n");
 }
 
 void a7672s_resetKey_Off(void)
 {
-    /* NOTE : This function Should not be modified here,
-            this Should be implemented in the user file
-   */
+    printf("Reset key OFF function Dummy\n");
 }
 
 void a7672s_resetKey_On(void)
 {
-    /* NOTE : This function Should not be modified here,
-            this Should be implemented in the user file
-   */
+    printf("Reset key ON function Dummy\n");
 }
 
 void a7672s_serial_send(const uint8_t* buff, size_t len)
 {
-    /* NOTE : This function Should not be modified here,
-            this Should be implemented in the user file
-   */
-    (void)buff;
-    (void)len;
+    printf("Serial send function Dummy: %s, %d\n", buff, len);
 }
 
-char* a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
+uint32_t a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
 {
-    /* NOTE : This function Should not be modified here,
-            this Should be implemented in the user file
-   */
-    (void)buff;
-    (void)max_bytes;
-    (void)timeout;
+    printf("Serial receive function Dummy: %d\n", timeout);
+    strncpy(buff, "OK\n\r", max_bytes);
+    return strlen(buff);
 }
