@@ -8,7 +8,7 @@
  * Contain example code to connect and publish subscribe to a 
  * mqtt broker
  */
-/*****************INCLUDES****************/
+/**********************************INCLUDES***********************************/
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -34,7 +34,8 @@ typedef enum
     MODEM_MQTT_CONNECT,
     MODEM_MQTT_PUBLISH
 } modem_state_t;
-/*****************MAIN FUNCTION****************/
+
+/*******************************MAIN FUNCTIONS********************************/
 int main()
 {
     /* data */
@@ -65,7 +66,7 @@ int main()
     /* print Json formatted serial buffer*/
     printf("ritJson Serialized JSON Data:\n%s\n", buffer);
 
-    modem_state_t modem_state = MODEM_RESET;
+    modem_state_t modem_state = MODEM_INIT;
     uint8_t error_count_u8 = 0U;
     uint8_t init_count_u8 = 0U;
 
@@ -136,4 +137,60 @@ int main()
             modem_state = MODEM_INIT;
         }
     }
+}
+
+/*******************************WEAK FUNCTIONS********************************/
+void a7672s_delay_ms(uint32_t delaytime)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+  (void)delaytime;
+}
+
+void a7672s_powerKey_Off(void)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+}
+
+void a7672s_powerKey_On(void)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+}
+
+void a7672s_resetKey_Off(void)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+}
+
+void a7672s_resetKey_On(void)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+}
+
+void a7672s_serial_send(const uint8_t* buff, size_t len)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+    (void)buff;
+    (void)len;
+}
+
+char* a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+    (void)buff;
+    (void)max_bytes;
+    (void)timeout;
 }

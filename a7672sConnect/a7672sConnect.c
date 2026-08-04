@@ -8,7 +8,7 @@
  * simcom's a7672s 4g LTE+GNSS+BLE module. Application layer code 
  * translating user's APIs to AT commands
  */
-/*****************INCLUDES****************/
+/**********************************INCLUDES***********************************/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include "a7672sConnect.h"
 
-/*****************MACROS****************/
+/***********************************MACROS************************************/
 #define A7672S_CMD_SIZE_MAX				    (64)
 #define A7672S_RESP_SIZE_MAX 				(32)
 #define A7672S_MQTT_CONNECT_CMD_SIZE        (128)
@@ -26,7 +26,7 @@
 #define CLIENT_ID                           "update_with_your_client_id"
 #define IOT_RX_BUFFER_MAX                   (128)
 
-/*****************TYPEDEFS****************/
+/**********************************TYPEDEFS***********************************/
 typedef bool (*a7672sHandler_t)(const char* cmd, const char* resp, uint32_t timeout); 
 typedef void(*a7672s_state_cb_t)(void);
 
@@ -81,9 +81,9 @@ typedef struct{
 	a7672sHandler_t rx_handler;
 } a7672s_cmdresp_t;
 
-/*****************GLOBAL VARIABLES****************/
+/******************************GLOBAL VARIABLES*******************************/
 
-/*****************LOCAL VARIABLES****************/
+/******************************LOCAL VARIABLES********************************/
 static a7672s_states_t a7672s_4g_state = A7672S_STATE_PWR_OFF;
 static a7672s_gps_states_t a7672s_gps_state = A7672S_GPS_STATE_POWER_OFF;
 static char signal_quality_str[5] = {0};
@@ -118,7 +118,8 @@ static a7672s_cmdresp_t gpsconnect[A7672S_GPSCONN_DONE] = {
 	{.cmd= "AT+CAGPS"MODEM_NL,.resp= MODEM_OK,.timeout= 1000,.rx_handler= A7672S_Bool_Handler},
 	{.cmd= "AT+CGNSSINFO"MODEM_NL,.resp= "+CGNSSINFO: ",.timeout= 9000,.rx_handler= A7672S_Gps_Handler},
 };
-/*****************LOCAL FUNCTION PROTOTYPES****************/
+
+/*************************LOCAL FUNCTION PROTOTYPES***************************/
 static bool A7672S_Bool_Handler(const char* cmd, const char* resp, uint32_t tout);
 static bool A7672S_SignalQ_Handler(const char* cmd, const char* resp, uint32_t tout);
 static bool A7672S_Creg_Handler(const char* cmd, const char* resp, uint32_t tout);
@@ -129,35 +130,60 @@ static int string_to_int(const char *str);
 static void a7672s_softStart(void);
 static void a7672s_hardReset(void);
 
-/*****************GLOBAL FUNCTIONS****************/
-__weak void a7672s_powerKey_Off()
+/******************************GLOBAL FUNCTIONS*******************************/
+__weak void a7672s_delay_ms(uint32_t delaytime)
 {
-    /* TODO */
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+  (void)delaytime;
 }
 
-__weak void a7672s_powerKey_On()
+__weak void a7672s_powerKey_Off(void)
 {
-    /* TODO */
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
 }
 
-__weak void a7672s_resetKey_Off()
+__weak void a7672s_powerKey_On(void)
 {
-    /* TODO */
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
 }
 
-__weak void a7672s_resetKey_On()
+__weak void a7672s_resetKey_Off(void)
 {
-    /* TODO */
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+}
+
+__weak void a7672s_resetKey_On(void)
+{
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
 }
 
 __weak void a7672s_serial_send(const uint8_t* buff, size_t len)
 {
-    /* TODO */
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+    (void)buff;
+    (void)len;
 }
 
 __weak char* a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
 {
-    /* TODO */
+    /* NOTE : This function Should not be modified here,
+            this Should be implemented in the user file
+   */
+    (void)buff;
+    (void)max_bytes;
+    (void)timeout;
 }
 
 void a7672s_modemStart(bool hard_reset_b)
@@ -169,7 +195,7 @@ void a7672s_modemStart(bool hard_reset_b)
     a7672s_softStart();
 }
 
-void a7672s_modemStop()
+void a7672s_modemStop(void)
 {
     a7672s_powerKey_Off();
 }
@@ -204,12 +230,12 @@ bool a7672s_netConnect(const char* apn)
     return ret_val;
 }
 
-bool a7672s_bleConnect()
+bool a7672s_bleConnect(void)
 {
     /* TODO */
 }
 
-bool a7672s_gpsConnect()
+bool a7672s_gpsConnect(void)
 {
     /* TODO */
 }
@@ -277,12 +303,12 @@ bool a7672s_mqttPublish(const char* data, size_t len, const char* topic, int qos
     return ret_val;
 }
 
-bool a7672s_wsConnect()
+bool a7672s_wsConnect(void)
 {
     /* TODO */
 }
 
-int a7672s_getSigq()
+int a7672s_getSigQ(void)
 {
     a7672s_nc_states_t nc_state = A7672S_NETCONN_CSQ;
     if (true == netconnect[nc_state].rx_handler(netconnect[nc_state].cmd, netconnect[nc_state].resp, netconnect[nc_state].timeout))
@@ -292,17 +318,21 @@ int a7672s_getSigq()
     return 0;
 }
 
-/*****************LOCAL FUNCTIONS****************/
-static void a7672s_softStart()
+/*********************************LOCAL FUNCTIONS*****************************/
+static void a7672s_softStart(void)
 {
     a7672s_powerKey_Off();
+    a7672s_delay_ms(4000);
     a7672s_powerKey_On();
+    a7672s_delay_ms(4000);
 }
 
-static void a7672s_hardReset()
+static void a7672s_hardReset(void)
 {
     a7672s_resetKey_Off();
+    a7672s_delay_ms(3000);
     a7672s_resetKey_On();
+    a7672s_delay_ms(6000);
 }
 
 static bool A7672S_Bool_Handler(const char* a7672s_cmd, const char* a7672s_resp, uint32_t a7672s_timeout)
