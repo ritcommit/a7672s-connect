@@ -13,9 +13,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <unistd.h>
 #include "a7672sConnect.h"
 #include "ritJson.h"
 
+/***********************************MACROS************************************/
+#define MS_TO_S                 1000U
+
+/* network macros */
 #define MODEM_APN               "jionet"
 #define MQTT_CLIENT             "example"
 #define MQTT_URL                "mosquitto"
@@ -26,6 +31,7 @@
 #define MQTT_TOPIC              "random topic"
 #define MQTT_QOS                0
 
+/**********************************TYPEDEFS***********************************/
 typedef enum
 {
     MODEM_RESET=0,
@@ -34,6 +40,9 @@ typedef enum
     MODEM_MQTT_CONNECT,
     MODEM_MQTT_PUBLISH
 } modem_state_t;
+
+/******************************LOCAL VARIABLES********************************/
+uint8_t reply_id = 0U;
 
 /*******************************MAIN FUNCTIONS********************************/
 int main()
@@ -142,7 +151,7 @@ int main()
 /*******************************WEAK FUNCTIONS********************************/
 void a7672s_delay_ms(uint32_t delaytime)
 {
-    printf("Delay function Dummy\n");
+    sleep(delaytime/1000U);
 }
 
 void a7672s_powerKey_Off(void)
@@ -168,11 +177,42 @@ void a7672s_resetKey_On(void)
 void a7672s_serial_send(const uint8_t* buff, size_t len)
 {
     printf("Serial send function Dummy: %s, %d\n", buff, len);
+
+    if(NULL != strstr(buff, "AT+CSQ"))
+    {
+        reply_id = 1U;
+    }
+    if(NULL != strstr(buff, "AT+CREG?"))
+    {
+        reply_id = 2U;
+    }
 }
 
 uint32_t a7672s_serial_receive(uint8_t* buff, size_t max_bytes, uint32_t timeout)
 {
-    printf("Serial receive function Dummy: %d\n", timeout);
-    strncpy(buff, "OK\n\r", max_bytes);
+    printf("Serial receive function Dummy\n");
+    switch(reply_id)
+    {
+        case 0U:
+            strncpy(buff, "OK\n\r", max_bytes);
+        break;
+
+        case 1U:
+            strncpy(buff, "+CSQ: 31,99\r\nOK\n\r", max_bytes);
+            reply_id = 0U;
+        break;
+
+        case 2U:
+            strncpy(buff, "+CREG: 0,1\r\nOK\n\r", max_bytes);
+            reply_id = 0U;
+        break;
+
+        default:
+            strncpy(buff, "OK\n\r", max_bytes);
+            reply_id = 0U;
+        break;
+    }
+    
+    sleep(timeout/1000U);
     return strlen(buff);
 }
